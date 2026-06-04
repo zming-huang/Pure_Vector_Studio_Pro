@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pure Vector Studio Pro</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      margin: 0 0 4px 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+    }
+
+    .left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    #drop-area {
+      border: 3px dashed #cbd5e1;
+      border-radius: 16px;
+      padding: 80px 40px;
+      text-align: center;
+      background-color: var(--card);
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+
+    #drop-area.dragover {
+      border-color: var(--primary);
+      background-color: #f5f3ff;
+      color: var(--primary);
+    }
+
+    /* ==========================================
+       🎨 美化画布背景：淡淡的现代几何色块
+       ========================================== */
+    #preview-container {
+      display: none; /* 初始隐藏，动态由 JS 切换为 block */
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+      background-color: #fcfdfe;
+      background-image: 
+        linear-gradient(rgba(226, 232, 240, 0.25) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(226, 232, 240, 0.25) 1px, transparent 1px),
+        linear-gradient(135deg, rgba(2, 132, 199, 0.03) 0%, rgba(2, 132, 199, 0.03) 35%, transparent 35%),
+        linear-gradient(315deg, rgba(79, 70, 229, 0.03) 0%, rgba(79, 70, 229, 0.03) 40%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 0.5) 100%);
+      background-size: 24px 24px, 24px 24px, 100% 100%, 100% 100%, 100% 100%;
+      box-shadow: inset 0 2px 8px rgba(15, 23, 42, 0.02);
+    }
+
+    #preview-container::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #preview {
+      display: block;
+      max-width: 100%;
+      max-height: 450px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 10px 25px rgba(15, 23, 42, 0.06));
+    }
+
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .card h3 {
+      margin: 0 0 16px 0;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .slider-header span {
+      color: var(--text-muted);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .size-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .size-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .custom-size-inputs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .custom-size-inputs.indent {
+      margin-left: 22px;
+    }
+
+    .custom-size-inputs input {
+      width: 75px;
+      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      text-align: center;
+      color: var(--text);
+    }
+
+    .custom-size-inputs input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .custom-size-inputs span {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .action-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-svg-download { background-color: var(--primary); color: white; }
+    .btn-svg-download:hover { background-color: var(--primary-hover); }
+    
+    .btn-svg-copy { background-color: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
+    .btn-svg-copy:hover { background-color: #e2e8f0; }
+
+    .btn-png-download { background-color: var(--accent); color: white; margin-top: 6px; }
+    .btn-png-download:hover { background-color: var(--accent-hover); }
+
+    .loading-text {
+      animation: pulse 1.5s infinite ease-in-out;
+      font-weight: 500;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; color: var(--primary); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>⚡ Pure Vector Studio Pro</h1>
+      <p>Local &amp; Secure Image-to-SVG Vectorization &amp; Proportional Bitmap Exporter</p>
+    </header>
+
+    <div class="workspace">
+      <div class="left-col">
+        <div id="drop-area">Click to select or drop an image file here to start</div>
+        <input type="file" id="file-elem" accept="image/*" style="display:none">
+        
+        <div id="preview-container">
+          <img id="preview" alt="Vector Grid Preview">
+        </div>
+      </div>
+
+      <div class="right-col">
+        <div class="card">
+          <h3>1. Tuning Parameters</h3>
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="param-colors">Max Colors</label>
+              <span id="val-colors">4</span>
+            </div>
+            <input type="range" id="param-colors" min="2" max="16" value="4">
+          </div>
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="param-blur">Noise Filter</label>
+              <span id="val-blur">2</span>
+            </div>
+            <input type="range" id="param-blur" min="1" max="30" value="2">
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>2. Export as Vector (SVG)</h3>
+          <div class="size-options">
+            <label class="size-item">
+              <input type="radio" name="size-spec" value="responsive" checked>
+              <span>Responsive (Keep original aspect ratio)</span>
+            </label>
+            <label class="size-item">
+              <input type="radio" name="size-spec" value="800x640">
+              <span>Standard (800 × 640 px)</span>
+            </label>
+            <label class="size-item">
+              <input type="radio" name="size-spec" value="1280x800">
+              <span>HD Present (1280 × 800 px)</span>
+            </label>
+            <label class="size-item">
+              <input type="radio" name="size-spec" value="custom">
+              <span>Custom Layout Frame</span>
+            </label>
+            
+            <div class="custom-size-inputs indent" id="custom-dims-box">
+              <input type="number" id="custom-w" value="500" min="1">
+              <span>×</span>
+              <input type="number" id="custom-h" value="500" min="1">
+              <span>px</span>
+            </div>
+          </div>
+
+          <div class="action-group">
+            <button id="download-btn" class="btn-svg-download">Download SVG File</button>
+            <button id="copy-btn" class="btn-svg-copy">Copy SVG Source Code</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>3. Export as Bitmap (PNG)</h3>
+          <div class="size-options" style="margin-bottom: 12px;">
+            <label class="size-item">
+              <input type="radio" name="png-policy" value="proportional" checked>
+              <span>Proportional (Auto-link aspect ratio)</span>
+            </label>
+            <label class="size-item">
+              <input type="radio" name="png-policy" value="fixed-padding">
+              <span>Fixed Target Canvas (Letterbox Padding)</span>
+            </label>
+          </div>
+
+          <div class="control-group">
+            <div class="custom-size-inputs">
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <span style="font-size:11px; color: var(--text-muted);">Width (px)</span>
+                <input type="number" id="png-w" placeholder="Width" min="1">
+              </div>
+              <span style="align-self: flex-end; margin-bottom: 10px; font-size: 14px; font-weight: bold;">×</span>
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <span style="font-size:11px; color: var(--text-muted);">Height (px)</span>
+                <input type="number" id="png-h" placeholder="Height" min="1">
+              </div>
+            </div>
+          </div>
+          <div class="action-group">
+            <button id="png-resize-btn" class="btn-png-download">🎯 Smart Render &amp; Download PNG</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="libs/imagetracer_v1.2.6.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
