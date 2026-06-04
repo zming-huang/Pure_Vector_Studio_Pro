@@ -4,6 +4,7 @@
 > [🇺🇸 English](#-english) · [🇨🇳 简体中文](#-简体中文) · [🇯🇵 日本語](#-日本語) · [🇪🇸 Español](#-español)
 
 ---
+![Studio Preview](whole20260604153811_361_396-1.png)
 
 <a id="-english"></a>
 
@@ -250,4 +251,3 @@ Esta herramienta de software se distribuye bajo la Licencia MIT. Siéntete libre
 
 ---
 
-![Studio Preview](whole20260604153811_361_396-1.png)
